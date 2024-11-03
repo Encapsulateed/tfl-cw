@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'Rule.dart';
+import 'rule.dart';
 
 class Grammar {
   Set<String> terminals = {};
