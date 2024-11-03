@@ -1,4 +1,3 @@
-
 class State {
   late String left;
   late String right;
