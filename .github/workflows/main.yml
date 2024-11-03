@@ -25,3 +25,20 @@ jobs:
 
       - name: Run tests
         run: dart test
+
+  Lint:
+     runs-on: ubuntu-latest
+
+     steps:
+      - uses: actions/checkout@v3
+      - name: Set up Dart
+        uses: dart-lang/setup-dart@v1
+
+      - name: Install dependencies
+        run: dart pub get
+      
+      - name: Verify Formatting
+        run: dart format --output=none --set-exit-if-changed .
+      
+      - name: Analyze Project Source
+        run: dart analyze 
