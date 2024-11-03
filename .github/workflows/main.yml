@@ -1,22 +1,27 @@
-name: Lint
+name: Dart Tests
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  Lint:
+  test:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Dart
+
+      - name: Install Dart
         uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 'stable'
+
       - name: Install dependencies
         run: dart pub get
 
-
-  
-      - name: Verify Formatting
-        run: dart format --output=none --set-exit-if-changed .
-
-      - name: Analyze Project Source
-        run: dart analyze 
+      - name: Run tests
+        run: dart test

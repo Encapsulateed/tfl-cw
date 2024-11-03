@@ -1,0 +1,3 @@
+*.txt
+*.lock
+.dart_tool
