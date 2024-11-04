@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'rule.dart';
 import 'state.dart';
 import 'grammar.dart';
