@@ -66,33 +66,84 @@ void main() {
       await tempFile.delete();
     });
 
-    test('Файловый ввод 3', () async {
+    test('Файловый ввод 3 граматика Охотина (ita)', () async {
       var tempFile = File('${Directory.systemTemp.path}/input.txt');
-      await tempFile.writeAsString("S -> eps & a b | START | c");
+
+      await tempFile.writeAsString(
+          "S -> K a & a R \nK -> a A | K a \nP -> a A \nA -> P b | b\nR -> B a | a R \nQ -> B a \nB -> b Q | b ");
 
       var grammar = Grammar.fromFile(tempFile);
 
-      expect(grammar.nonTerminals, equals(List.from(['S', 'START'])));
-      expect(grammar.terminals, equals(List.from(['eps', 'a', 'b', 'c'])));
+      expect(grammar.nonTerminals,
+          equals(List.from(['S', 'K', 'R', 'A', 'P', 'B', 'Q'])));
+      expect(
+          grammar.terminals,
+          equals(List.from([
+            'a',
+            'b',
+          ])));
 
       expect(
           grammar.rules[0].conjuncts,
           equals(List<List<String>>.from([
-            ['eps'],
-            ['a', 'b']
+            ['K', 'a'],
+            ['a', 'R']
           ])));
 
       expect(
           grammar.rules[1].conjuncts,
           equals(List<List<String>>.from([
-            ['START']
+            ['a', 'A']
           ])));
       expect(
           grammar.rules[2].conjuncts,
           equals(List<List<String>>.from([
-            ['c']
+            ['K', 'a']
           ])));
 
+      expect(
+          grammar.rules[3].conjuncts,
+          equals(List<List<String>>.from([
+            ['a', 'A']
+          ])));
+      expect(
+          grammar.rules[4].conjuncts,
+          equals(List<List<String>>.from([
+            ['P', 'b']
+          ])));
+
+      expect(
+          grammar.rules[5].conjuncts,
+          equals(List<List<String>>.from([
+            ['b']
+          ])));
+      expect(
+          grammar.rules[6].conjuncts,
+          equals(List<List<String>>.from([
+            ['B', 'a']
+          ])));
+      expect(
+          grammar.rules[7].conjuncts,
+          equals(List<List<String>>.from([
+            ['a', 'R']
+          ])));
+      expect(
+          grammar.rules[8].conjuncts,
+          equals(List<List<String>>.from([
+            ['B', 'a']
+          ])));
+      expect(
+          grammar.rules[9].conjuncts,
+          equals(List<List<String>>.from([
+            ['b', 'Q']
+          ])));
+      expect(
+          grammar.rules[10].conjuncts,
+          equals(List<List<String>>.from([
+            [
+              'b',
+            ]
+          ])));
       await tempFile.delete();
     });
   });

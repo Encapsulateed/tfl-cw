@@ -29,5 +29,5 @@ dart test
 ```
 S -> A a & B b
 A -> a | c 
-B -> b
+B -> b | d | f
 ```
