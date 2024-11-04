@@ -11,14 +11,14 @@ class TrellisAutomaton {
   late State Function(String) Init;
   late State Function(State q1, State q2) Transition;
 
-  late List<(State, State, State)> transitions;
-
   TrellisAutomaton.build(Grammar g) {
     alphabet = Set.from(g.terminals);
     Init = _build_init(List<Rule>.from(g.rules));
     Transition = _build_transitions(List<Rule>.from(g.rules));
     states = _build_states(alphabet);
-    transitions = _write_transitions(List<Rule>.from(g.rules));
+
+    finals =
+        states.where((q) => q.generating.contains(g.startNonTerminal)).toSet();
   }
 
   State Function(String) _build_init(List<Rule> rules) {
@@ -60,22 +60,5 @@ class TrellisAutomaton {
     } while (newStates.isNotEmpty);
 
     return reachableStates;
-  }
-
-  List<(State, State, State)> _write_transitions(List<Rule> rules) {
-    var transitions = <(State, State, State)>[];
-
-    for (var q1 in states) {
-      for (var q2 in states) {
-        for (var rule in rules) {
-          if (rule.applicableForTransition(q1, q2)) {
-            transitions.add((q1, q2, Transition(q1, q2)));
-            break;
-          }
-        }
-      }
-    }
-
-    return transitions;
   }
 }

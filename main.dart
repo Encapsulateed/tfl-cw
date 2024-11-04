@@ -1,7 +1,5 @@
 import 'dart:io';
-
 import 'src/types/grammar.dart';
-
 import 'src/types/trellis_automaton.dart';
 import 'src/utils/table_writer.dart';
 
