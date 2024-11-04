@@ -27,7 +27,11 @@ dart test
 
 Пример 
 ```
-S -> A a & B b
-A -> a | c 
-B -> b | d | f
+S -> K a & a R 
+K -> a A | K a 
+P -> a A 
+A -> P b | b
+R -> B a | a R 
+Q -> B a 
+B -> b Q | b 
 ```
