@@ -1,28 +1,33 @@
+import 'dart:io';
+
 import 'rule.dart';
 import 'state.dart';
 import 'grammar.dart';
 
+import 'dart:collection';
+
 class TrellisAutomaton {
   Set<String> alphabet = {};
-  Set<State> states = {};
+  HashSet<State> states = HashSet<State>();
   Set<State> finals = {};
   late State Function(String) Init;
   late State Function(State q1, State q2) Transition;
+
+  late List<(State, State, State)> transitions;
 
   TrellisAutomaton.build(Grammar g) {
     alphabet = Set.from(g.terminals);
     Init = _build_init(List<Rule>.from(g.rules));
     Transition = _build_transitions(List<Rule>.from(g.rules));
-    states.addAll(alphabet.map((t) => Init(t)));
+    states = _build_states(alphabet);
+    transitions = _write_transitions(List<Rule>.from(g.rules));
   }
 
-  // TODO написать тесты для инит функции
   State Function(String) _build_init(List<Rule> rules) {
     return (String w) => State.create(
         w, rules.where((r) => r.deducible(w)).map((r) => r.left).toSet(), w);
   }
 
-// TODO написать тесты для функции построения переходов
   State Function(State q1, State q2) _build_transitions(List<Rule> rules) {
     return (State q1, State q2) {
       return State.create(
@@ -33,5 +38,46 @@ class TrellisAutomaton {
               .toSet(),
           q2.right);
     };
+  }
+
+  HashSet<State> _build_states(Set<String> terms) {
+    var initialStates = terms.map((t) => Init(t)).toSet();
+    var reachableStates = HashSet<State>.from(initialStates);
+    var newStates = HashSet<State>();
+
+    do {
+      newStates.clear();
+      for (var q1 in reachableStates) {
+        for (var q2 in reachableStates) {
+          var newState = Transition(q1, q2);
+
+          if (!reachableStates.contains(newState) &&
+              !newStates.contains(newState)) {
+            newStates.add(newState);
+          }
+        }
+      }
+
+      reachableStates.addAll(newStates);
+    } while (newStates.isNotEmpty);
+
+    return reachableStates;
+  }
+
+  List<(State, State, State)> _write_transitions(List<Rule> rules) {
+    var transitions = <(State, State, State)>[];
+
+    for (var q1 in states) {
+      for (var q2 in states) {
+        for (var rule in rules) {
+          if (rule.applicableForTransition(q1, q2)) {
+            transitions.add((q1, q2, Transition(q1, q2)));
+            break;
+          }
+        }
+      }
+    }
+
+    return transitions;
   }
 }

@@ -11,20 +11,29 @@ class State {
 
   @override
   String toString() {
-    var nt_set = generating.length != 0 ? '{${generating.join(' ')}}' : '∅';
+    var nt_set = generating.isNotEmpty ? '{${generating.join(' ')}}' : '∅';
     return '($left, $nt_set, $right)';
   }
 
   @override
   bool operator ==(Object other) {
-    if (other is! State) return false;
     if (identical(this, other)) return true;
+    if (other is! State) return false;
 
-    if (this.left == other.left && this.right == other.right) {
-      return this.generating.length == other.generating.length &&
-          this.generating.containsAll(other.generating);
-    }
+    return left == other.left &&
+        right == other.right &&
+        generating.length == other.generating.length &&
+        generating.containsAll(other.generating);
+  }
 
-    return false;
+  @override
+  int get hashCode {
+    // Комбинируем хэш-коды полей с помощью качественного способа
+    var result = 17;
+    result = 37 * result + left.hashCode;
+    result = 37 * result + right.hashCode;
+    result = 37 * result +
+        generating.fold(0, (hash, element) => hash + element.hashCode);
+    return result;
   }
 }
