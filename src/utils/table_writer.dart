@@ -15,18 +15,23 @@ void dump_transition_table(File file, TrellisAutomaton ta) {
     var row = [i.toString().padLeft(4)];
 
     for (var j = 0; j < numStates; j++) {
-      var newState = ta.Transition(stateList[i], stateList[j]);
-      var newIndex = stateList.indexOf(newState);
+      var newState = ta.parsing_table[(stateList[i], stateList[j])];
+      var newIndex = newState != null ? stateList.indexOf(newState) : -1;
       row.add(newIndex.toString().padLeft(4));
     }
 
     sink.writeln(row.join(' '));
   }
 
-  sink.writeln('\n');
-
+  sink.writeln('\nСписок состояния -> индекс:');
   for (var i = 0; i < stateList.length; i++) {
     sink.writeln('$i: ${stateList[i].toString()}');
+  }
+
+  sink.writeln('\nПринимающие состояния:');
+  for (var finalState in ta.finals) {
+    var finalIndex = stateList.indexOf(finalState);
+    sink.writeln('$finalIndex: ${finalState.toString()}');
   }
 
   sink.close();

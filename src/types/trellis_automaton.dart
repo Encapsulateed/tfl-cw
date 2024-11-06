@@ -10,8 +10,10 @@ class TrellisAutomaton {
   Set<State> finals = {};
   late State Function(String) Init;
   late State Function(State q1, State q2) Transition;
+  late HashMap<(State, State), State> parsing_table;
 
   TrellisAutomaton.build(Grammar g) {
+    parsing_table = HashMap<(State, State), State>();
     alphabet = Set.from(g.terminals);
     Init = _build_init(List<Rule>.from(g.rules));
     Transition = _build_transitions(List<Rule>.from(g.rules));
@@ -19,6 +21,8 @@ class TrellisAutomaton {
 
     finals =
         states.where((q) => q.generating.contains(g.startNonTerminal)).toSet();
+
+    _build_parsing_table();
   }
 
   State Function(String) _build_init(List<Rule> rules) {
@@ -60,5 +64,19 @@ class TrellisAutomaton {
     } while (newStates.isNotEmpty);
 
     return reachableStates;
+  }
+
+  void _build_parsing_table() {
+    for (var q1 in states) {
+      for (var q2 in states) {
+        var newState = Transition(q1, q2);
+        parsing_table[(q1, q2)] = newState;
+      }
+    }
+  }
+
+  int getStateIndex(State state) {
+    var stateList = states.toList();
+    return stateList.indexOf(state);
   }
 }

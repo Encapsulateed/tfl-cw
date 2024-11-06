@@ -1,3 +1,4 @@
 *.txt
+*.dot
 *.lock
 .dart_tool
