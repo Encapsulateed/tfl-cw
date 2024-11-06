@@ -5,6 +5,7 @@ import 'src/types/trellis_automaton.dart';
 import 'src/utils/table_writer.dart';
 import 'src/utils/tree_writer.dart';
 
+// dart main.dart input.txt grammar.txt output.txt parse.dot -e
 void main(List<String> arguments) {
   if (arguments.length < 3) throw 'Invalid amount of arguments!';
 

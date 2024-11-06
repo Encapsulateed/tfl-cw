@@ -5,10 +5,9 @@ import 'common.dart';
 void saveToDotFile(List<List<Node>> layers, File file) {
   final buffer = StringBuffer();
   buffer.writeln('digraph G {');
-  buffer.writeln('rankdir=TB;'); // Оставляем направление сверху вниз
+  buffer.writeln('rankdir=TB;');
   buffer.writeln('node [shape=plaintext];');
 
-  // Перебор слоев в обратном порядке, чтобы нулевой слой был внизу
   for (int i = layers.length - 1; i >= 0; i--) {
     buffer.write('{ rank=same; ');
     List<Node> layer = layers[i];
