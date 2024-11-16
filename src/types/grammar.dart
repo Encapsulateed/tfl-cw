@@ -46,14 +46,11 @@ class Grammar {
           var parts = line.split('->').map((part) => part.trim()).toList();
           var left = parts[0].toUpperCase();
 
-          // Добавляем левую часть как нетерминал
           nonTerminals.add(left);
 
-          // Обработка альтернатив, разделенных символом |
           var alternatives = parts[1].split('|').map((alt) => alt.trim());
 
           for (var alternative in alternatives) {
-            // Разбиваем альтернативу на слова по пробелам
             var conjuncts = alternative
                 .split('&')
                 .map((conj) => conj
@@ -64,11 +61,9 @@ class Grammar {
                 .toList();
 
             conjuncts.expand((conj) => conj).forEach((symbol) {
-              // Проверяем, является ли слово нетерминалом (все заглавные буквы)
               if (_isNonTerminal(symbol)) {
                 nonTerminals.add(symbol);
               } else {
-                // Если слово в нижнем регистре, оно считается терминалом
                 terminals.add(symbol);
               }
             });
@@ -84,8 +79,12 @@ class Grammar {
   }
 
   bool _isNonTerminal(String symbol) {
-    // Проверяем, состоит ли слово только из заглавных букв
     return RegExp(r'^[A-Z]+$').hasMatch(symbol);
+  }
+
+  // TODO impliment this 
+  void convertToLNF(){
+
   }
 
   @override
