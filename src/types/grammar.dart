@@ -82,10 +82,8 @@ class Grammar {
     return RegExp(r'^[A-Z]+$').hasMatch(symbol);
   }
 
-  // TODO impliment this 
-  void convertToLNF(){
-
-  }
+  // TODO impliment this
+  void convertToLNF() {}
 
   @override
   String toString() {
