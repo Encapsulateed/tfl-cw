@@ -1,4 +1,4 @@
 *.txt
 *.dot
-*.lock
+*.DS_Store
 .dart_tool
