@@ -17,29 +17,27 @@ class Rule {
   // q = (q1.left == b, Z, q2.right == c)
   // Z = {A | exists A -> b B1 & .. & b Bm & C1 c & .. & Cn c}
   // where B1...Bm in q2.Generating == X and C1...Cn in q1.Generating == Y
-
   bool applicableForTransition(State q1, State q2) {
     var b = q1.left;
     var c = q2.right;
     var X = q1.generating;
     var Y = q2.generating;
 
-    if (!conjuncts.every((conj) => conj.length == 2)) return false;
-
-    // Получим нетеременалы B1...Bm
+    // Получим нетерминалы B1...Bm
     var B = conjuncts
         .where((conj) => conj.first == b)
         .map((conj) => conj.last)
         .toSet();
 
-    // Получим нетеременалы C1...Cn
+    // Получим нетерминалы C1...Cn
     var C = conjuncts
         .where((conj) => conj.last == c)
         .map((conj) => conj.first)
-        .toList()
         .toSet();
 
-    if (C.length == 0 && B.length == 0) return false;
+    if (C.isEmpty && B.isEmpty) return false;
+    if (C.isEmpty) return Y.containsAll(B);
+    if (B.isEmpty) return X.containsAll(C);
 
     return X.containsAll(C) && Y.containsAll(B);
   }

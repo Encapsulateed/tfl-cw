@@ -28,7 +28,6 @@ class State {
 
   @override
   int get hashCode {
-    // Комбинируем хэш-коды полей с помощью качественного способа
     var result = 17;
     result = 37 * result + left.hashCode;
     result = 37 * result + right.hashCode;

@@ -216,15 +216,12 @@ class TrellisAutomaton {
     var grammar = Grammar();
     var stateList = states.toList();
 
-    // Создаем нетерминалы для каждого состояния
     for (var i = 0; i < stateList.length; i++) {
       grammar.nonTerminals.add('A$i');
     }
 
-    // Добавляем терминалы из алфавита
     grammar.terminals.addAll(alphabet);
 
-    // Добавляем правила для переходов
     for (var entry in parsing_table.entries) {
       var fromStateIndex = stateList.indexOf(entry.key.$1);
       var toStateIndex = stateList.indexOf(entry.key.$2);
@@ -232,20 +229,21 @@ class TrellisAutomaton {
 
       for (var b in alphabet) {
         for (var c in alphabet) {
-          grammar.rules.add(
-            Rule(
-              'A$resultingStateIndex',
-              [
-                [b, 'A$toStateIndex'],
-                ['A$fromStateIndex', c]
-              ],
-            ),
+          var r = Rule(
+            'A$resultingStateIndex',
+            [
+              [b, 'A$toStateIndex'],
+              ['A$fromStateIndex', c]
+            ],
           );
+          if (grammar.rules.contains(r)) {
+            continue;
+          }
+          grammar.rules.add(r);
         }
       }
     }
 
-    // Добавляем правило для стартового терминала S -> Aq
     for (var finalState in finals) {
       var finalStateIndex = stateList.indexOf(finalState);
       grammar.rules.add(
@@ -255,20 +253,27 @@ class TrellisAutomaton {
       );
     }
 
-    // Добавляем правила Ai(a) -> a
-    for (var i = 0; i < stateList.length; i++) {
-      for (var a in alphabet) {
-        grammar.rules.add(
-          Rule('A$i', [
-            [a]
-          ]),
-        );
-      }
+    var initGeneratedStates = alphabet
+        .map((a) => Init(a))
+        .where((state) => stateList.contains(state))
+        .toSet();
+
+    for (var a in alphabet) {
+      var relatedInitState = initGeneratedStates
+          .where((s) => s.left == a && s.right == a)
+          .firstOrNull!;
+
+      var stateIndex = stateList.indexOf(relatedInitState);
+      var rule = Rule('A$stateIndex', [
+        [a]
+      ]);
+      grammar.rules.add(rule);
     }
 
-    // Устанавливаем стартовый символ грамматики
+    grammar.nonTerminals.add('S');
     grammar.startNonTerminal = 'S';
-    grammar.convertToLNF();
+
+    // grammar.convertToLNF();
     saveGrammarToFile(grammar, File('grammar.txt'));
 
     return grammar;
@@ -296,5 +301,21 @@ class TrellisAutomaton {
     }
 
     sink.close();
+  }
+
+  @override
+  String toString() {
+    var stateList = states.toList();
+
+    var initGeneratedStates = alphabet
+        .map((a) => Init(a))
+        .where((state) => stateList.contains(state))
+        .toSet();
+
+    var str = '';
+
+    str =
+        'Alf : ${alphabet} \n INIT : ${initGeneratedStates} \n STATES : ${stateList}';
+    return str;
   }
 }
