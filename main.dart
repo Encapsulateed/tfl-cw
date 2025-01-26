@@ -26,14 +26,11 @@ void main(List<String> arguments) {
 
   if (use_automaton) {
     ta = TrellisAutomaton.fromFile(input_file);
-    var g = ta.toGrammar();
-    // print(g);
   } else {
     var g = Grammar.fromFile(input_file);
     g.convertToLNF();
 
     ta = TrellisAutomaton.build(g);
-    //print(g);
   }
 
   dump_automaton_details(out_file, ta);
@@ -41,7 +38,6 @@ void main(List<String> arguments) {
   var tree =
       ParsingTree.create(input_word.readAsStringSync(), ta, explanations);
 
-  //print(tree.layers);
   saveToDotFile(tree.layers, dot_file);
   print(tree.isRecognizing());
 }

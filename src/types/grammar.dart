@@ -99,9 +99,9 @@ class Grammar {
   }
 
   String NonTerm() {
-    int counter = 1;
     String candidate;
-
+    var counter = 0;
+    counter = counter++;
     while (true) {
       candidate = "N\$counter";
       if (!nonTerminals.contains(candidate)) {
