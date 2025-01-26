@@ -81,7 +81,7 @@ class Grammar {
   }
 
   bool _isNonTerminal(String symbol) {
-    return RegExp(r'^[A-Z]+$').hasMatch(symbol);
+    return RegExp(r'^[A-Z]+[0-9]*$').hasMatch(symbol);
   }
 
   void convertToLNF() {
@@ -103,7 +103,7 @@ class Grammar {
     String candidate;
 
     while (true) {
-      candidate = "N$counter";
+      candidate = "N\$counter";
       if (!nonTerminals.contains(candidate)) {
         nonTerminals.add(candidate);
         return candidate;
@@ -127,8 +127,6 @@ class Grammar {
       {
         List<String> output = conj;
         if (!isLNF(conj)) {
-          // проверим является ли конъюнктом вида
-          // X -> u1...un Y w1 ... wk
           var isLeftConj = terminals.contains(conj[0]);
 
           if (isLeftConj) {
@@ -143,10 +141,7 @@ class Grammar {
 
             rules.add(rule);
             nonTerminals.add(NonTerm());
-          }
-          // значит вида
-          // X -> Y w1 ... wk
-          else {
+          } else {
             var term = conj[conj.length - 1];
             var nonterm = NonTerm();
 
@@ -175,13 +170,10 @@ class Grammar {
         var rule = rules[i];
         var ntSetPrev = Set<String>.from(nonTerminals);
 
-        // Преобразуем конъюнкты с помощью reduceConj
         var conjLst = rule.conjuncts.map((conj) => reduceConj(conj)).toList();
 
-        // Обновляем правило
         rules[i] = Rule(rule.left, conjLst);
 
-        // Проверяем изменения в множестве нетерминалов
         if (!ntSetPrev.containsAll(nonTerminals) ||
             !nonTerminals.containsAll(ntSetPrev)) {
           changed = true;
@@ -206,7 +198,6 @@ class Grammar {
 
       rules.removeWhere((rule) => rule.left == startNonTerminal);
 
-      // Добавляем каждое правило S -> (σ1 & ... & σk) в S'
       for (var rule
           in currentRules.where((rule) => rule.left == startNonTerminal)) {
         if (!rules.any((r) =>
@@ -314,37 +305,41 @@ class Grammar {
   }
 
   void removeUnitConjuncts() {
-    bool changed = true;
+    // Шаг 1: Создаем новый список для обновленных правил
+    List<Rule> updatedRules = [];
 
-    while (changed) {
-      changed = false;
-      List<Rule> updatedRules = [];
+    // Шаг 2: Проходим по всем правилам
+    for (var rule in rules) {
+      bool modified = false;
 
-      for (var rule in rules) {
-        List<List<String>> newConjuncts = [];
+      // Шаг 3: Ищем unit conjunct в каждом конъюнкте
+      for (var conjunct in rule.conjuncts) {
+        if (conjunct.length == 1 && _isNonTerminal(conjunct[0])) {
+          modified = true;
+          String targetNonTerminal = conjunct[0];
 
-        for (var conjunct in rule.conjuncts) {
-          if (conjunct.length == 1 && _isNonTerminal(conjunct[0])) {
-            String targetNonTerminal = conjunct[0];
-
-            var targetRules = rules.where((r) => r.left == targetNonTerminal);
-
-            for (var targetRule in targetRules) {
-              for (var targetConjunct in targetRule.conjuncts) {
-                newConjuncts.add(targetConjunct);
-              }
-            }
-            changed = true;
-          } else {
-            newConjuncts.add(conjunct);
+          // Шаг 4: Находим все правила для целевого нетерминала
+          for (var targetRule
+              in rules.where((r) => r.left == targetNonTerminal)) {
+            // Для каждой альтернативы создаем новое правило
+            updatedRules.add(Rule(rule.left, [
+              for (var originalConjunct in rule.conjuncts)
+                if (originalConjunct != conjunct) originalConjunct,
+              ...targetRule.conjuncts
+            ]));
           }
         }
-
-        updatedRules.add(Rule(rule.left, newConjuncts));
       }
 
-      rules = updatedRules;
+      // Шаг 5: Если правило не было модифицировано, добавляем его как есть
+      if (!modified) {
+        updatedRules.add(rule);
+      }
     }
+
+    // Шаг 6: Удаляем дубликаты и обновляем правила
+    rules = updatedRules;
+    removeDuplicateRules();
   }
 
   void removeDuplicateRules() {

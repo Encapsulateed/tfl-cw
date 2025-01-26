@@ -6,7 +6,7 @@ import 'src/utils/table_writer.dart';
 import 'src/utils/tree_writer.dart';
 
 // dart main.dart input.txt grammar.txt output.txt parse.dot -e
-// dart main.dart input.txt automation.txt output.txt parse.dot -e -m
+// dart main.dart input.txt output.txt output.txt parse.dot -e -m
 void main(List<String> arguments) {
   if (arguments.length < 3) throw 'Invalid amount of arguments!';
 
@@ -26,20 +26,22 @@ void main(List<String> arguments) {
 
   if (use_automaton) {
     ta = TrellisAutomaton.fromFile(input_file);
+    var g = ta.toGrammar();
+    // print(g);
   } else {
     var g = Grammar.fromFile(input_file);
     g.convertToLNF();
 
-    print(g);
-
     ta = TrellisAutomaton.build(g);
+    //print(g);
   }
 
   dump_automaton_details(out_file, ta);
 
   var tree =
       ParsingTree.create(input_word.readAsStringSync(), ta, explanations);
-  print(tree.layers);
+
+  //print(tree.layers);
   saveToDotFile(tree.layers, dot_file);
   print(tree.isRecognizing());
 }

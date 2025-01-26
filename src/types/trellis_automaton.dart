@@ -38,7 +38,6 @@ class TrellisAutomaton {
     if (lines[lineIndex].startsWith('Алфавит:')) {
       lineIndex++;
       alphabet = lines[lineIndex].split(',').map((e) => e.trim()).toSet();
-      print('Алфавит: $alphabet');
       lineIndex++;
     } else {
       throw StateError('Alphabet section is missing in the input file.');
@@ -52,7 +51,6 @@ class TrellisAutomaton {
     if (lines[lineIndex].startsWith('Init функция:')) {
       lineIndex++;
       while (lineIndex < lines.length && lines[lineIndex].contains('->')) {
-        print('Processing Init function line: ${lines[lineIndex]}');
         var parts = lines[lineIndex].split('->');
         var symbol = parts[0].trim();
         var stateInfo = parts[1].trim();
@@ -68,7 +66,6 @@ class TrellisAutomaton {
       Init = (String w) =>
           initMapping[w] ??
           (throw ArgumentError('Init mapping for symbol "$w" not found.'));
-      print('Init mapping: $initMapping');
     } else {
       throw StateError('Init function section is missing in the input file.');
     }
@@ -81,7 +78,6 @@ class TrellisAutomaton {
     if (lines[lineIndex].startsWith('Список состояния -> индекс:')) {
       lineIndex++;
       while (lineIndex < lines.length && lines[lineIndex].contains(':')) {
-        print('Processing state line: ${lines[lineIndex]}');
         var parts = lines[lineIndex].split(':');
         var stateInfo = parts[1].trim();
         var components =
@@ -95,7 +91,6 @@ class TrellisAutomaton {
         states.add(state);
         lineIndex++;
       }
-      print('Список состояний: $stateList');
     } else {
       throw StateError('State list section is missing in the input file.');
     }
@@ -107,7 +102,6 @@ class TrellisAutomaton {
     if (lines[lineIndex].startsWith('Принимающие состояния:')) {
       lineIndex++;
       while (lineIndex < lines.length && lines[lineIndex].contains(':')) {
-        print('Processing final state line: ${lines[lineIndex]}');
         var parts = lines[lineIndex].split(':');
         var index = int.parse(parts[0].trim());
         if (index < 0 || index >= stateList.length) {
@@ -116,7 +110,6 @@ class TrellisAutomaton {
         finals.add(stateList[index]);
         lineIndex++;
       }
-      print('Принимающие состояния: $finals');
     } else {
       throw StateError('Final states section is missing in the input file.');
     }
@@ -129,7 +122,6 @@ class TrellisAutomaton {
     if (lines[lineIndex].startsWith('Таблица переходов:')) {
       lineIndex++;
       while (lineIndex < lines.length && lines[lineIndex].trim().isNotEmpty) {
-        print('Processing transition table line: ${lines[lineIndex]}');
         var row = lines[lineIndex].trim().split(RegExp(r'\s+'));
         var fromIndex = int.parse(row[0]);
         if (fromIndex < 0 || fromIndex >= stateList.length) {
@@ -150,7 +142,6 @@ class TrellisAutomaton {
         }
         lineIndex++;
       }
-      print('Таблица переходов: $parsing_table');
     } else {
       throw StateError(
           'Transition table section is missing in the input file.');
@@ -219,5 +210,91 @@ class TrellisAutomaton {
           .replaceAll(RegExp(r'\}\}+'), '}');
     }
     return input;
+  }
+
+  Grammar toGrammar() {
+    var grammar = Grammar();
+    var stateList = states.toList();
+
+    // Создаем нетерминалы для каждого состояния
+    for (var i = 0; i < stateList.length; i++) {
+      grammar.nonTerminals.add('A$i');
+    }
+
+    // Добавляем терминалы из алфавита
+    grammar.terminals.addAll(alphabet);
+
+    // Добавляем правила для переходов
+    for (var entry in parsing_table.entries) {
+      var fromStateIndex = stateList.indexOf(entry.key.$1);
+      var toStateIndex = stateList.indexOf(entry.key.$2);
+      var resultingStateIndex = stateList.indexOf(entry.value);
+
+      for (var b in alphabet) {
+        for (var c in alphabet) {
+          grammar.rules.add(
+            Rule(
+              'A$resultingStateIndex',
+              [
+                [b, 'A$toStateIndex'],
+                ['A$fromStateIndex', c]
+              ],
+            ),
+          );
+        }
+      }
+    }
+
+    // Добавляем правило для стартового терминала S -> Aq
+    for (var finalState in finals) {
+      var finalStateIndex = stateList.indexOf(finalState);
+      grammar.rules.add(
+        Rule('S', [
+          ['A$finalStateIndex']
+        ]),
+      );
+    }
+
+    // Добавляем правила Ai(a) -> a
+    for (var i = 0; i < stateList.length; i++) {
+      for (var a in alphabet) {
+        grammar.rules.add(
+          Rule('A$i', [
+            [a]
+          ]),
+        );
+      }
+    }
+
+    // Устанавливаем стартовый символ грамматики
+    grammar.startNonTerminal = 'S';
+    grammar.convertToLNF();
+    saveGrammarToFile(grammar, File('grammar.txt'));
+
+    return grammar;
+  }
+
+  void saveGrammarToFile(Grammar grammar, File outputFile) {
+    var sink = outputFile.openWrite();
+
+    // Write the start non-terminal rule first
+    var startRules =
+        grammar.rules.where((rule) => rule.left == grammar.startNonTerminal);
+    for (var rule in startRules) {
+      var ruleStr = '${rule.left} -> ' +
+          rule.conjuncts.map((conj) => conj.join(' ')).join(' & ');
+      sink.writeln(ruleStr);
+    }
+
+    // Write the rest of the rules
+    var otherRules =
+        grammar.rules.where((rule) => rule.left != grammar.startNonTerminal);
+    for (var rule in otherRules) {
+      var ruleStr = '${rule.left} -> ' +
+          rule.conjuncts.map((conj) => conj.join(' ')).join(' & ');
+      sink.writeln(ruleStr);
+    }
+
+    sink.close();
   }
 }
