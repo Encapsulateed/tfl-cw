@@ -17,9 +17,10 @@ void main(List<String> arguments) {
 
   if (arguments.length == 5 && arguments[4] == '-e') explanations = true;
 
-  if (!input_grammar.existsSync()) throw 'File does not exist!';
+  if (!input_grammar.existsSync()) throw 'Grammar file does not exist!';
 
   var g = Grammar.fromFile(input_grammar);
+  g.convertToLNF();
 
   print(g);
 

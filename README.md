@@ -6,7 +6,7 @@
 
 # Запуск 
 ```
-dart main.dart INPUT.txt GRAMMAR_FILE.txt TABLE_FILE.txt PARSING.dot [-e]
+dart main.dart input.txt grammar.txt table.txt parsing.dot [-e]
 ```
 - Флаг ```-e``` указывается при необходимости расширить вывод автомат с подробным содержание состояний. <br/>
 - При отсутствии флага - состояния будут представлятся числовыми идентификаторами.<br/>
