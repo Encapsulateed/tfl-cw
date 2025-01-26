@@ -6,27 +6,36 @@ import 'src/utils/table_writer.dart';
 import 'src/utils/tree_writer.dart';
 
 // dart main.dart input.txt grammar.txt output.txt parse.dot -e
+// dart main.dart input.txt automation.txt output.txt parse.dot -e -m
 void main(List<String> arguments) {
   if (arguments.length < 3) throw 'Invalid amount of arguments!';
 
   var input_word = File(arguments[0]);
-  var input_grammar = File(arguments[1]);
+  var input_file = File(arguments[1]);
   var out_file = File(arguments[2]);
   var dot_file = File(arguments[3]);
   bool explanations = false;
+  bool use_automaton = false;
 
-  if (arguments.length == 5 && arguments[4] == '-e') explanations = true;
+  if (arguments.contains('-e')) explanations = true;
+  if (arguments.contains('-m')) use_automaton = true;
 
-  if (!input_grammar.existsSync()) throw 'Grammar file does not exist!';
+  if (!input_file.existsSync()) throw 'Input file does not exist!';
 
-  var g = Grammar.fromFile(input_grammar);
-  g.convertToLNF();
+  TrellisAutomaton ta;
 
-  print(g);
+  if (use_automaton) {
+    ta = TrellisAutomaton.fromFile(input_file);
+  } else {
+    var g = Grammar.fromFile(input_file);
+    g.convertToLNF();
 
-  var ta = TrellisAutomaton.build(g);
+    print(g);
 
-  dump_transition_table(out_file, ta);
+    ta = TrellisAutomaton.build(g);
+  }
+
+  dump_automaton_details(out_file, ta);
 
   var tree =
       ParsingTree.create(input_word.readAsStringSync(), ta, explanations);
