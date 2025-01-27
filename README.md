@@ -6,7 +6,7 @@
 
 # Запуск 
 ```
-dart main.dart input.txt [grammar | automation].txt table.txt parsing.dot [-e]
+dart main.dart input.txt [grammar | automation].txt table.txt parsing.dot [-e] [-m]
 ```
 - Флаг ```-e``` указывается при необходимости расширить вывод автомат с подробным содержание состояний. <br/>
 - Флаг `-m` указывает на необходимость парсить автомат в грамматику
