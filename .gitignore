@@ -1,4 +1,8 @@
 *.txt
 *.dot
 *.DS_Store
-.dart_tool
+*.xml
+*.iml
+**/.idea/
+**/.dart_tool/
+

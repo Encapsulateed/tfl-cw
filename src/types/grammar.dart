@@ -19,24 +19,6 @@ class Grammar {
     _readGrammarFromFile(inputFile);
   }
 
-  Grammar.fromRulst(List<Rule> prd) {
-    for (var rule in prd) {
-      nonTerminals.add(rule.left.toUpperCase());
-      if (startNonTerminal.isEmpty) {
-        startNonTerminal = rule.left.toUpperCase();
-      }
-
-      for (var symbol in rule.conjuncts.expand((conj) => conj)) {
-        if (_isNonTerminal(symbol)) {
-          nonTerminals.add(symbol.toUpperCase());
-        } else {
-          terminals.add(symbol.toLowerCase());
-        }
-      }
-    }
-    this.rules = prd;
-  }
-
   void _readGrammarFromFile(File inputFile) {
     try {
       var lines = inputFile.readAsStringSync().split('\n');
@@ -44,6 +26,7 @@ class Grammar {
       for (var line in lines) {
         if (line.trim().isNotEmpty) {
           var parts = line.split('->').map((part) => part.trim()).toList();
+
           var left = parts[0].toUpperCase();
 
           nonTerminals.add(left);
@@ -80,22 +63,51 @@ class Grammar {
     }
   }
 
+  void writeGrammarToFile(File outputFile) {
+    var buffer = StringBuffer();
+
+    var groups = <String, List<Rule>>{};
+    for (var rule in rules) {
+      groups.putIfAbsent(rule.left, () => []).add(rule);
+    }
+
+    if (groups.containsKey(startNonTerminal)) {
+      var ruleList = groups[startNonTerminal]!;
+      List<String> alternatives = ruleList.map((rule) {
+        List<String> conjunctStrings =
+        rule.conjuncts.map((conj) => conj.join(" ")).toList();
+        return conjunctStrings.join(" & ");
+      }).toList();
+      buffer.writeln("$startNonTerminal -> " + alternatives.join(" | "));
+      groups.remove(startNonTerminal);
+    }
+
+    groups.forEach((left, ruleList) {
+      List<String> alternatives = ruleList.map((rule) {
+        List<String> conjunctStrings =
+        rule.conjuncts.map((conj) => conj.join(" ")).toList();
+        return conjunctStrings.join(" & ");
+      }).toList();
+      buffer.writeln("$left -> " + alternatives.join(" | "));
+    });
+
+    outputFile.writeAsStringSync(buffer.toString());
+  }
+
+
+
   bool _isNonTerminal(String symbol) {
     return RegExp(r'^[A-Z]+[0-9]*$').hasMatch(symbol);
   }
 
   void convertToLNF() {
     _processStartSymbol();
-    removeDuplicateRules();
 
     processEpsRules(computeNullable());
-    removeDuplicateRules();
 
     removeUnitConjuncts();
-    removeDuplicateRules();
 
     processRules();
-    removeDuplicateRules();
   }
 
   String NonTerm() {
@@ -103,9 +115,8 @@ class Grammar {
     var counter = 0;
     counter = counter++;
     while (true) {
-      candidate = "N\$counter";
+      candidate = "N$counter";
       if (!nonTerminals.contains(candidate)) {
-        nonTerminals.add(candidate);
         return candidate;
       }
 
@@ -139,8 +150,9 @@ class Grammar {
 
             output = Conj;
 
+            nonTerminals.add(nonterm);
             rules.add(rule);
-            nonTerminals.add(NonTerm());
+
           } else {
             var term = conj[conj.length - 1];
             var nonterm = NonTerm();
@@ -153,7 +165,7 @@ class Grammar {
             output = Conj;
 
             rules.add(rule);
-            nonTerminals.add(NonTerm());
+            nonTerminals.add(nonterm);
           }
         }
 
@@ -213,8 +225,29 @@ class Grammar {
 
   @override
   String toString() {
-    return 'TERMINALS: ${terminals.join(' ')}\nNON TERMINALS: ${nonTerminals.join(' ')}\nSTART: $startNonTerminal\nRULES:\n${rules.join('\n')}';
+    var buffer = StringBuffer();
+    buffer.writeln('TERMINALS: ${terminals.join(' ')}');
+    buffer.writeln('NON TERMINALS: ${nonTerminals.join(' ')}');
+    buffer.writeln('START: $startNonTerminal');
+    buffer.writeln('RULES:');
+
+
+    var groups = <String, List<Rule>>{};
+    for (var rule in rules) {
+      groups.putIfAbsent(rule.left, () => []).add(rule);
+    }
+
+    groups.forEach((left, ruleList) {
+      List<String> alternatives = ruleList.map((rule) {
+        List<String> conjunctStrings = rule.conjuncts.map((conj) => conj.join(" ")).toList();
+        return conjunctStrings.join(" & ");
+      }).toList();
+      buffer.writeln("$left -> " + alternatives.join(" | "));
+    });
+
+    return buffer.toString();
   }
+
 
   int getRuleIndex(Rule rule) {
     return rules.indexOf(rule);
@@ -255,7 +288,7 @@ class Grammar {
 
     List<Rule> Rules = [];
 
-    for (var rule in rules.where((rule) => rule.left == "S'")) {
+    for (var rule in rules.where((rule) => rule.left == startNonTerminal)) {
       if (!Rules.any(
           (r) => r.left == rule.left && r.conjuncts.contains(rule.conjuncts))) {
         Rules.add(rule);
@@ -305,23 +338,18 @@ class Grammar {
   }
 
   void removeUnitConjuncts() {
-    // Шаг 1: Создаем новый список для обновленных правил
     List<Rule> updatedRules = [];
 
-    // Шаг 2: Проходим по всем правилам
     for (var rule in rules) {
       bool modified = false;
 
-      // Шаг 3: Ищем unit conjunct в каждом конъюнкте
       for (var conjunct in rule.conjuncts) {
         if (conjunct.length == 1 && _isNonTerminal(conjunct[0])) {
           modified = true;
           String targetNonTerminal = conjunct[0];
 
-          // Шаг 4: Находим все правила для целевого нетерминала
           for (var targetRule
               in rules.where((r) => r.left == targetNonTerminal)) {
-            // Для каждой альтернативы создаем новое правило
             updatedRules.add(Rule(rule.left, [
               for (var originalConjunct in rule.conjuncts)
                 if (originalConjunct != conjunct) originalConjunct,
@@ -331,15 +359,12 @@ class Grammar {
         }
       }
 
-      // Шаг 5: Если правило не было модифицировано, добавляем его как есть
       if (!modified) {
         updatedRules.add(rule);
       }
     }
 
-    // Шаг 6: Удаляем дубликаты и обновляем правила
     rules = updatedRules;
-    removeDuplicateRules();
   }
 
   void removeDuplicateRules() {

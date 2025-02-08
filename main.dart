@@ -7,13 +7,17 @@ import 'src/utils/tree_writer.dart';
 
 // dart main.dart input.txt grammar.txt output.txt parse.dot -e
 // dart main.dart input.txt output.txt output.txt parse.dot -e -m
+
 void main(List<String> arguments) {
+  const DEBUG = false;
+
   if (arguments.length < 3) throw 'Invalid amount of arguments!';
 
   var input_word = File(arguments[0]);
   var input_file = File(arguments[1]);
   var out_file = File(arguments[2]);
   var dot_file = File(arguments[3]);
+
   bool explanations = false;
   bool use_automaton = false;
 
@@ -22,23 +26,26 @@ void main(List<String> arguments) {
 
   if (!input_file.existsSync()) throw 'Input file does not exist!';
 
-  TrellisAutomaton ta;
+  if (!DEBUG){
+    TrellisAutomaton ta;
 
-  if (use_automaton) {
-    ta = TrellisAutomaton.fromFile(input_file);
-    ta.toGrammar();
-    print(ta);
-  } else {
-    var g = Grammar.fromFile(input_file);
-    g.convertToLNF();
-    ta = TrellisAutomaton.build(g);
+    if (use_automaton) {
+      ta = TrellisAutomaton.fromFile(input_file);
+      ta.toGrammar();
+      print(ta);
+    } else {
+      var g = Grammar.fromFile(input_file);
+      g.convertToLNF();
+      g.writeGrammarToFile(File('LNF_grammar.txt'));
+
+      ta = TrellisAutomaton.build(g);
+    }
+
+    dump_automaton_details(out_file, ta);
+
+    var tree = ParsingTree.create(input_word.readAsStringSync().replaceAll(' ', ''), ta, explanations);
+
+    saveToDotFile(tree.layers, dot_file);
+    print(tree.isRecognizing());
   }
-
-  dump_automaton_details(out_file, ta);
-  var tree =
-      ParsingTree.create(input_word.readAsStringSync(), ta, explanations);
-
-  saveToDotFile(tree.layers, dot_file);
-  print(tree.isRecognizing());
-  /**/
 }

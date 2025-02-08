@@ -1,3 +1,4 @@
+import '../utils/common.dart';
 import 'rule.dart';
 import 'state.dart';
 import 'grammar.dart';
@@ -227,13 +228,13 @@ class TrellisAutomaton {
       var toStateIndex = stateList.indexOf(entry.key.$2);
       var resultingStateIndex = stateList.indexOf(entry.value);
 
-      for (var b in alphabet) {
-        for (var c in alphabet) {
+      for (var pair in slidingPairs(alphabet.toList())) {
+        // Aq -> b Aqj & Aqi c
           var r = Rule(
             'A$resultingStateIndex',
             [
-              [b, 'A$toStateIndex'],
-              ['A$fromStateIndex', c]
+              [pair.$1, 'A$toStateIndex'],
+              ['A$fromStateIndex', pair.$2]
             ],
           );
           if (grammar.rules.contains(r)) {
@@ -241,7 +242,6 @@ class TrellisAutomaton {
           }
           grammar.rules.add(r);
         }
-      }
     }
 
     for (var finalState in finals) {
@@ -273,8 +273,9 @@ class TrellisAutomaton {
     grammar.nonTerminals.add('S');
     grammar.startNonTerminal = 'S';
 
-    // grammar.convertToLNF();
-    saveGrammarToFile(grammar, File('grammar.txt'));
+    grammar.rules.sort();
+
+    grammar.writeGrammarToFile(File('grammar.txt'));
 
     return grammar;
   }

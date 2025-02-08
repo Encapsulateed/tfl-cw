@@ -1,6 +1,6 @@
 import 'state.dart';
 
-class Rule {
+class Rule implements Comparable {
   String left;
   List<List<String>> conjuncts;
 
@@ -56,4 +56,35 @@ class Rule {
 
   @override
   int get hashCode => left.hashCode ^ conjuncts.hashCode;
+
+  @override
+  int compareTo(other) {
+    if (other is! Rule) {
+      throw ArgumentError("Можно сравнивать только объекты класса Rule");
+    }
+
+    String left1 = left;
+    String left2 = other.left;
+
+    // Регулярное выражение для разделения на буквенную и числовую части.
+    RegExp exp = RegExp(r'^([A-Za-z]+)(\d+)$');
+    var match1 = exp.firstMatch(left1);
+    var match2 = exp.firstMatch(left2);
+
+    if (match1 != null && match2 != null) {
+      // Сравниваем буквенные префиксы.
+      int prefixComparison = match1.group(1)!.compareTo(match2.group(1)!);
+      if (prefixComparison != 0) return prefixComparison;
+
+      // Префиксы равны: сравниваем числовые части как числа.
+      int num1 = int.parse(match1.group(2)!);
+      int num2 = int.parse(match2.group(2)!);
+      return num1.compareTo(num2);
+    } else {
+      // Если не удалось выделить числовую часть, выполняем обычное лексикографическое сравнение.
+      return left1.compareTo(left2);
+    }
+  }
+
+
 }
