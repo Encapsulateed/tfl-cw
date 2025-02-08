@@ -85,6 +85,4 @@ class Rule implements Comparable {
       return left1.compareTo(left2);
     }
   }
-
-
 }

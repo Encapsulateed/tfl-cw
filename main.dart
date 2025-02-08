@@ -26,7 +26,7 @@ void main(List<String> arguments) {
 
   if (!input_file.existsSync()) throw 'Input file does not exist!';
 
-  if (!DEBUG){
+  if (!DEBUG) {
     TrellisAutomaton ta;
 
     if (use_automaton) {
@@ -43,7 +43,8 @@ void main(List<String> arguments) {
 
     dump_automaton_details(out_file, ta);
 
-    var tree = ParsingTree.create(input_word.readAsStringSync().replaceAll(' ', ''), ta, explanations);
+    var tree = ParsingTree.create(
+        input_word.readAsStringSync().replaceAll(' ', ''), ta, explanations);
 
     saveToDotFile(tree.layers, dot_file);
     print(tree.isRecognizing());

@@ -38,11 +38,11 @@ class ParsingTree {
 
   Node Function(Node, Node) _build_next() {
     return (Node first, Node second) {
-      try{
-        State next = _ta.parsing_table[(first.related_state, second.related_state)]!;
+      try {
+        State next =
+            _ta.parsing_table[(first.related_state, second.related_state)]!;
         return Node.create(nodeToString(next), next);
-      }
-      catch(ex){
+      } catch (ex) {
         throw ('Unexpected terminal in input word!');
       }
     };

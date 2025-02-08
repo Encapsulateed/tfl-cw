@@ -230,18 +230,18 @@ class TrellisAutomaton {
 
       for (var pair in slidingPairs(alphabet.toList())) {
         // Aq -> b Aqj & Aqi c
-          var r = Rule(
-            'A$resultingStateIndex',
-            [
-              [pair.$1, 'A$toStateIndex'],
-              ['A$fromStateIndex', pair.$2]
-            ],
-          );
-          if (grammar.rules.contains(r)) {
-            continue;
-          }
-          grammar.rules.add(r);
+        var r = Rule(
+          'A$resultingStateIndex',
+          [
+            [pair.$1, 'A$toStateIndex'],
+            ['A$fromStateIndex', pair.$2]
+          ],
+        );
+        if (grammar.rules.contains(r)) {
+          continue;
         }
+        grammar.rules.add(r);
+      }
     }
 
     for (var finalState in finals) {

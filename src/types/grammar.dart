@@ -75,7 +75,7 @@ class Grammar {
       var ruleList = groups[startNonTerminal]!;
       List<String> alternatives = ruleList.map((rule) {
         List<String> conjunctStrings =
-        rule.conjuncts.map((conj) => conj.join(" ")).toList();
+            rule.conjuncts.map((conj) => conj.join(" ")).toList();
         return conjunctStrings.join(" & ");
       }).toList();
       buffer.writeln("$startNonTerminal -> " + alternatives.join(" | "));
@@ -85,7 +85,7 @@ class Grammar {
     groups.forEach((left, ruleList) {
       List<String> alternatives = ruleList.map((rule) {
         List<String> conjunctStrings =
-        rule.conjuncts.map((conj) => conj.join(" ")).toList();
+            rule.conjuncts.map((conj) => conj.join(" ")).toList();
         return conjunctStrings.join(" & ");
       }).toList();
       buffer.writeln("$left -> " + alternatives.join(" | "));
@@ -93,8 +93,6 @@ class Grammar {
 
     outputFile.writeAsStringSync(buffer.toString());
   }
-
-
 
   bool _isNonTerminal(String symbol) {
     return RegExp(r'^[A-Z]+[0-9]*$').hasMatch(symbol);
@@ -152,7 +150,6 @@ class Grammar {
 
             nonTerminals.add(nonterm);
             rules.add(rule);
-
           } else {
             var term = conj[conj.length - 1];
             var nonterm = NonTerm();
@@ -231,7 +228,6 @@ class Grammar {
     buffer.writeln('START: $startNonTerminal');
     buffer.writeln('RULES:');
 
-
     var groups = <String, List<Rule>>{};
     for (var rule in rules) {
       groups.putIfAbsent(rule.left, () => []).add(rule);
@@ -239,7 +235,8 @@ class Grammar {
 
     groups.forEach((left, ruleList) {
       List<String> alternatives = ruleList.map((rule) {
-        List<String> conjunctStrings = rule.conjuncts.map((conj) => conj.join(" ")).toList();
+        List<String> conjunctStrings =
+            rule.conjuncts.map((conj) => conj.join(" ")).toList();
         return conjunctStrings.join(" & ");
       }).toList();
       buffer.writeln("$left -> " + alternatives.join(" | "));
@@ -247,7 +244,6 @@ class Grammar {
 
     return buffer.toString();
   }
-
 
   int getRuleIndex(Rule rule) {
     return rules.indexOf(rule);
