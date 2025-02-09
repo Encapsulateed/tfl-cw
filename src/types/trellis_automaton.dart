@@ -222,24 +222,27 @@ class TrellisAutomaton {
 
     grammar.terminals.addAll(alphabet);
 
-    for (var entry in parsing_table.entries) {
-      var fromStateIndex = stateList.indexOf(entry.key.$1);
-      var toStateIndex = stateList.indexOf(entry.key.$2);
-      var resultingStateIndex = stateList.indexOf(entry.value);
+    for (var q1 in states) {
+      for (var q2 in states) {
+        var q = parsing_table[(q1,q2)]!;
 
-      for (var pair in slidingPairs(alphabet.toList())) {
-        // Aq -> b Aqj & Aqi c
-        var r = Rule(
-          'A$resultingStateIndex',
-          [
-            [pair.$1, 'A$toStateIndex'],
-            ['A$fromStateIndex', pair.$2]
-          ],
-        );
-        if (grammar.rules.contains(r)) {
-          continue;
+        var q1idx = stateList.indexOf(q1);
+        var q2idx = stateList.indexOf(q2);
+
+        var qidx = stateList.indexOf(q);
+
+        for (var b in alphabet) {
+          for (var c in alphabet) {
+            var r = Rule(
+              'A$qidx',
+              [
+                [b, 'A$q2idx'],
+                ['A$q1idx', c]
+              ],
+            );
+            grammar.rules.add(r);
+          }
         }
-        grammar.rules.add(r);
       }
     }
 

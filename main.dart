@@ -23,6 +23,7 @@ void main(List<String> arguments) {
   var out_file = File(arguments[2]);
   var dot_file = File(arguments[3]);
 
+  var word = input_word.readAsStringSync().replaceAll(' ', '');
   bool explanations = false;
   bool use_automaton = false;
 
@@ -50,10 +51,9 @@ void main(List<String> arguments) {
 
     dump_automaton_details(out_file, ta);
 
-    var tree = ParsingTree.create(
-        input_word.readAsStringSync().replaceAll(' ', ''), ta, explanations);
+    var tree = ParsingTree.create(word, ta, explanations);
 
     saveToDotFile(tree.layers, dot_file);
-    print(tree.isRecognizing());
+    print('Parsing on CA: ${tree.isRecognizing()}');
   }
 }
