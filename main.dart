@@ -8,6 +8,11 @@ import 'src/utils/tree_writer.dart';
 // dart main.dart input.txt grammar.txt output.txt parse.dot -e
 // dart main.dart input.txt output.txt output.txt parse.dot -e -m
 
+// TODO
+// CYK алгоритм для ЛНФ грамматик, чтобы проверить, что не работает
+// Парсер по автомату => дебаг + перепроверка октябрьских файлов
+// Нормализоватор => только бог поможет найти там косяк
+
 void main(List<String> arguments) {
   const DEBUG = false;
 
@@ -34,9 +39,11 @@ void main(List<String> arguments) {
       ta.toGrammar();
       print(ta);
     } else {
-      var g = Grammar.fromFile(input_file);
+      var g = Grammar();
+      g.loadFromFile(input_file.path);
+
       g.convertToLNF();
-      g.writeGrammarToFile(File('LNF_grammar.txt'));
+      g.saveToFile('lnf_grammar.txt');
 
       ta = TrellisAutomaton.build(g);
     }

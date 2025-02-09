@@ -5,28 +5,26 @@ void dump_automaton_details(File file, TrellisAutomaton ta) {
   var sink = file.openWrite();
   var stateList = ta.states.toList();
   var numStates = stateList.length;
-  // Вывод алфавита
+
   sink.writeln('Алфавит:');
   sink.writeln(ta.alphabet.join(', '));
 
-  // Вывод Init функции
   sink.writeln('\nInit функция:');
   for (var symbol in ta.alphabet) {
     var state = ta.Init(symbol);
     sink.writeln('$symbol -> ${state.toString()}');
   }
 
-  sink.writeln('\nСписок состояния -> индекс:');
+  sink.writeln('\nИндекс -> Список состояний:');
   for (var i = 0; i < stateList.length; i++) {
-    sink.writeln('$i: ${stateList[i].toString()}');
+    sink.writeln('$i: ${stateList[i]}');
   }
 
   sink.writeln('\nПринимающие состояния:');
   for (var finalState in ta.finals) {
     var finalIndex = stateList.indexOf(finalState);
-    sink.writeln('$finalIndex: ${finalState.toString()}');
+    sink.writeln('$finalIndex: ${stateList[finalIndex]}');
   }
-  // Вывод переходной таблицы
   sink.writeln('\nТаблица переходов:');
 
   var header = [' '.padLeft(4)];

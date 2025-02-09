@@ -11,6 +11,7 @@ class State {
 
   @override
   String toString() {
+    generating.forEach((g) => g.replaceAll(RegExp(r'[{}]'), ''));
     var nt_set = generating.isNotEmpty ? '{${generating.join(' ')}}' : '∅';
     return '($left, $nt_set, $right)';
   }

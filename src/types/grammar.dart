@@ -5,7 +5,7 @@ class Grammar {
   Set<String> terminals = {};
   Set<String> nonTerminals = {};
   List<Rule> rules = [];
-  String startNonTerminal = '';
+  String startSymbol = '';
 
   Grammar();
 
@@ -15,12 +15,9 @@ class Grammar {
     this.rules = prd;
   }
 
-  Grammar.fromFile(File inputFile) {
-    _readGrammarFromFile(inputFile);
-  }
-
-  void _readGrammarFromFile(File inputFile) {
+  void loadFromFile(String path) {
     try {
+      var inputFile = File(path);
       var lines = inputFile.readAsStringSync().split('\n');
 
       for (var line in lines) {
@@ -57,13 +54,14 @@ class Grammar {
           }
         }
       }
-      startNonTerminal = nonTerminals.first;
+      startSymbol = nonTerminals.first;
     } catch (e) {
       print('Произошла ошибка при чтении файла: $e');
     }
   }
 
-  void writeGrammarToFile(File outputFile) {
+  void saveToFile(String path) {
+    var outputFile = File(path);
     var buffer = StringBuffer();
 
     var groups = <String, List<Rule>>{};
@@ -71,15 +69,15 @@ class Grammar {
       groups.putIfAbsent(rule.left, () => []).add(rule);
     }
 
-    if (groups.containsKey(startNonTerminal)) {
-      var ruleList = groups[startNonTerminal]!;
+    if (groups.containsKey(startSymbol)) {
+      var ruleList = groups[startSymbol]!;
       List<String> alternatives = ruleList.map((rule) {
         List<String> conjunctStrings =
             rule.conjuncts.map((conj) => conj.join(" ")).toList();
         return conjunctStrings.join(" & ");
       }).toList();
-      buffer.writeln("$startNonTerminal -> " + alternatives.join(" | "));
-      groups.remove(startNonTerminal);
+      buffer.writeln("$startSymbol -> " + alternatives.join(" | "));
+      groups.remove(startSymbol);
     }
 
     groups.forEach((left, ruleList) {
@@ -106,6 +104,7 @@ class Grammar {
     removeUnitConjuncts();
 
     processRules();
+    MergeRules();
   }
 
   String NonTerm() {
@@ -192,7 +191,7 @@ class Grammar {
   }
 
   void _processStartSymbol() {
-    if (computeNullable().contains(startNonTerminal)) {
+    if (computeNullable().contains(startSymbol)) {
       String newStartSymbol = "S'";
       nonTerminals.add(newStartSymbol);
 
@@ -205,18 +204,15 @@ class Grammar {
 
       var currentRules = List<Rule>.from(rules);
 
-      rules.removeWhere((rule) => rule.left == startNonTerminal);
+      rules.removeWhere((rule) => rule.left == startSymbol);
 
-      for (var rule
-          in currentRules.where((rule) => rule.left == startNonTerminal)) {
-        if (!rules.any((r) =>
-            r.left == newStartSymbol &&
-            _areConjunctsEqual(r.conjuncts, rule.conjuncts))) {
+      for (var rule in currentRules.where((rule) => rule.left == startSymbol)) {
+        if (!rules.any((r) => r.left == newStartSymbol && r == rule)) {
           rules.add(Rule(newStartSymbol, List.from(rule.conjuncts)));
         }
       }
 
-      startNonTerminal = newStartSymbol;
+      startSymbol = newStartSymbol;
     }
   }
 
@@ -225,7 +221,7 @@ class Grammar {
     var buffer = StringBuffer();
     buffer.writeln('TERMINALS: ${terminals.join(' ')}');
     buffer.writeln('NON TERMINALS: ${nonTerminals.join(' ')}');
-    buffer.writeln('START: $startNonTerminal');
+    buffer.writeln('START: $startSymbol');
     buffer.writeln('RULES:');
 
     var groups = <String, List<Rule>>{};
@@ -284,7 +280,7 @@ class Grammar {
 
     List<Rule> Rules = [];
 
-    for (var rule in rules.where((rule) => rule.left == startNonTerminal)) {
+    for (var rule in rules.where((rule) => rule.left == startSymbol)) {
       if (!Rules.any(
           (r) => r.left == rule.left && r.conjuncts.contains(rule.conjuncts))) {
         Rules.add(rule);
@@ -292,11 +288,11 @@ class Grammar {
     }
 
     for (var rule in rules) {
-      if (rule.left == startNonTerminal) {
+      if (rule.left == startSymbol) {
         continue;
       }
       List<List<String>> Conjuncts = [];
-      if (rule.left == startNonTerminal) {
+      if (rule.left == startSymbol) {
         if (!Rules.any((r) =>
             r.left == rule.left && r.conjuncts.contains(rule.conjuncts))) {
           Rules.add(rule);
@@ -363,33 +359,108 @@ class Grammar {
     rules = updatedRules;
   }
 
-  void removeDuplicateRules() {
-    List<Rule> uniqueRules = [];
+  void groupAndMergeEqualRules() {
+    List<Rule> rulesWithAlternatives = [];
+    List<Rule> rulesWithoutAlternatives = [];
+
+    Map<String, List<Rule>> groupedByLeft = {};
 
     for (var rule in rules) {
-      if (!uniqueRules.any((r) =>
-          r.left == rule.left &&
-          _areConjunctsEqual(r.conjuncts, rule.conjuncts))) {
-        uniqueRules.add(rule);
+      if (!groupedByLeft.containsKey(rule.left)) {
+        groupedByLeft[rule.left] = [];
+      }
+      groupedByLeft[rule.left]!.add(rule);
+    }
+
+    groupedByLeft.forEach((left, group) {
+      if (group.length > 1) {
+        rulesWithAlternatives.addAll(group);
+      } else {
+        rulesWithoutAlternatives.addAll(group);
+      }
+    });
+
+    Map<String, Set<String>> equals = {};
+
+    for (var rule in rulesWithoutAlternatives) {
+      for (var rule2 in rulesWithoutAlternatives) {
+        if (equals[rule.left] == null) {
+          equals[rule.left] = {rule.left};
+        }
+
+        if (rule.left == rule2.left) {
+          continue;
+        }
+
+        if (rule == rule2) {
+          equals[rule.left]!.add(rule2.left);
+        }
       }
     }
 
-    rules = uniqueRules;
-    removeUnusedNonTerminals();
+    Map<String, Set<String>> cleanedEquals = {};
+    for (var k1 in equals.keys) {
+      var set1 = equals[k1]!;
+      bool alreadyMerged = cleanedEquals.values
+          .any((s) => s.containsAll(set1) && set1.containsAll(s));
+
+      if (!alreadyMerged) {
+        cleanedEquals[k1] = set1;
+      }
+    }
+    Map<String, String> replacementMap = {};
+    cleanedEquals.forEach((key, value) {
+      for (var v in value) {
+        replacementMap[v] = key;
+      }
+    });
+
+    List<Rule> updatedRules = [];
+
+    for (var rule in rulesWithAlternatives) {
+      var updatedConjuncts = rule.conjuncts.map((conj) {
+        return conj.map((symbol) {
+          return replacementMap.containsKey(symbol)
+              ? replacementMap[symbol]!
+              : symbol;
+        }).toList();
+      }).toList();
+
+      updatedRules.add(Rule(rule.left, updatedConjuncts));
+    }
+
+    Map<String, Rule> finalRulesMap = {};
+
+    for (var rule in rulesWithoutAlternatives) {
+      String newLeft = replacementMap.containsKey(rule.left)
+          ? replacementMap[rule.left]!
+          : rule.left;
+
+      var updatedConjuncts = rule.conjuncts.map((conj) {
+        return conj.map((symbol) {
+          return replacementMap.containsKey(symbol)
+              ? replacementMap[symbol]!
+              : symbol;
+        }).toList();
+      }).toList();
+
+      finalRulesMap[newLeft] = Rule(newLeft, updatedConjuncts);
+    }
+
+    updatedRules.addAll(finalRulesMap.values);
+
+    rules = updatedRules;
   }
 
-  bool _areConjunctsEqual(
-      List<List<String>> conjuncts1, List<List<String>> conjuncts2) {
-    if (conjuncts1.length != conjuncts2.length) return false;
-
-    for (var i = 0; i < conjuncts1.length; i++) {
-      if (conjuncts1[i].length != conjuncts2[i].length ||
-          !conjuncts1[i].every((symbol) => conjuncts2[i].contains(symbol))) {
-        return false;
-      }
-    }
-
-    return true;
+  void MergeRules() {
+    Set<String> previousRules = {};
+    Set<String> currentRules = {};
+    do {
+      previousRules = rules.map((r) => r.toString()).toSet();
+      groupAndMergeEqualRules();
+      currentRules = rules.map((r) => r.toString()).toSet();
+    } while (previousRules.length != currentRules.length);
+    removeUnusedNonTerminals();
   }
 
   void removeUnusedNonTerminals() {

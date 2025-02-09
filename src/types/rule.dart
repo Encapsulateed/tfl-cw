@@ -51,7 +51,25 @@ class Rule implements Comparable {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! Rule) return false;
-    return left == other.left && conjuncts == other.conjuncts;
+
+    return _areConjunctsEqual(conjuncts, other.conjuncts);
+  }
+
+  bool _areConjunctsEqual(List<List<String>> conj1, List<List<String>> conj2) {
+    if (conj1.length != conj2.length) return false;
+
+    for (int i = 0; i < conj1.length; i++) {
+      if (conj1[i].length != conj2[i].length) {
+        return false;
+      }
+      for (int j = 0; j < conj1[i].length; j++) {
+        if (conj1[i][j] != conj2[i][j]) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 
   @override
@@ -60,28 +78,24 @@ class Rule implements Comparable {
   @override
   int compareTo(other) {
     if (other is! Rule) {
-      throw ArgumentError("Можно сравнивать только объекты класса Rule");
+      throw ArgumentError();
     }
 
     String left1 = left;
     String left2 = other.left;
 
-    // Регулярное выражение для разделения на буквенную и числовую части.
     RegExp exp = RegExp(r'^([A-Za-z]+)(\d+)$');
     var match1 = exp.firstMatch(left1);
     var match2 = exp.firstMatch(left2);
 
     if (match1 != null && match2 != null) {
-      // Сравниваем буквенные префиксы.
       int prefixComparison = match1.group(1)!.compareTo(match2.group(1)!);
       if (prefixComparison != 0) return prefixComparison;
 
-      // Префиксы равны: сравниваем числовые части как числа.
       int num1 = int.parse(match1.group(2)!);
       int num2 = int.parse(match2.group(2)!);
       return num1.compareTo(num2);
     } else {
-      // Если не удалось выделить числовую часть, выполняем обычное лексикографическое сравнение.
       return left1.compareTo(left2);
     }
   }

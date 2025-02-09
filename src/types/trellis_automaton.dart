@@ -21,8 +21,7 @@ class TrellisAutomaton {
     Transition = _build_transitions(List<Rule>.from(g.rules));
     states = _build_states(alphabet);
 
-    finals =
-        states.where((q) => q.generating.contains(g.startNonTerminal)).toSet();
+    finals = states.where((q) => q.generating.contains(g.startSymbol)).toSet();
 
     _build_parsing_table();
   }
@@ -76,7 +75,7 @@ class TrellisAutomaton {
     }
 
     var stateList = <State>[];
-    if (lines[lineIndex].startsWith('Список состояния -> индекс:')) {
+    if (lines[lineIndex].startsWith('Индекс -> Список состояний:')) {
       lineIndex++;
       while (lineIndex < lines.length && lines[lineIndex].contains(':')) {
         var parts = lines[lineIndex].split(':');
@@ -253,29 +252,26 @@ class TrellisAutomaton {
       );
     }
 
-    var initGeneratedStates = alphabet
-        .map((a) => Init(a))
-        .where((state) => stateList.contains(state))
-        .toSet();
+    var initGeneratedStates = alphabet.map((a) => Init(a)).toSet();
 
-    for (var a in alphabet) {
+    for (var term in alphabet) {
       var relatedInitState = initGeneratedStates
-          .where((s) => s.left == a && s.right == a)
+          .where((s) => s.left == term && s.right == term)
           .firstOrNull!;
 
       var stateIndex = stateList.indexOf(relatedInitState);
       var rule = Rule('A$stateIndex', [
-        [a]
+        [term]
       ]);
       grammar.rules.add(rule);
     }
 
     grammar.nonTerminals.add('S');
-    grammar.startNonTerminal = 'S';
+    grammar.startSymbol = 'S';
 
     grammar.rules.sort();
 
-    grammar.writeGrammarToFile(File('grammar.txt'));
+    grammar.saveToFile('grammar.txt');
 
     return grammar;
   }
@@ -283,18 +279,16 @@ class TrellisAutomaton {
   void saveGrammarToFile(Grammar grammar, File outputFile) {
     var sink = outputFile.openWrite();
 
-    // Write the start non-terminal rule first
     var startRules =
-        grammar.rules.where((rule) => rule.left == grammar.startNonTerminal);
+        grammar.rules.where((rule) => rule.left == grammar.startSymbol);
     for (var rule in startRules) {
       var ruleStr = '${rule.left} -> ' +
           rule.conjuncts.map((conj) => conj.join(' ')).join(' & ');
       sink.writeln(ruleStr);
     }
 
-    // Write the rest of the rules
     var otherRules =
-        grammar.rules.where((rule) => rule.left != grammar.startNonTerminal);
+        grammar.rules.where((rule) => rule.left != grammar.startSymbol);
     for (var rule in otherRules) {
       var ruleStr = '${rule.left} -> ' +
           rule.conjuncts.map((conj) => conj.join(' ')).join(' & ');
