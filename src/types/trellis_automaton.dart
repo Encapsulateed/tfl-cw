@@ -192,8 +192,7 @@ class TrellisAutomaton {
   void _build_parsing_table() {
     for (var q1 in states) {
       for (var q2 in states) {
-        var newState = Transition(q1, q2);
-        parsing_table[(q1, q2)] = newState;
+        parsing_table[(q1, q2)] = Transition(q1, q2);
       }
     }
   }
@@ -311,7 +310,7 @@ class TrellisAutomaton {
     var str = '';
 
     str =
-        'Alf : ${alphabet} \n INIT : ${initGeneratedStates} \n STATES : ${stateList}';
+        'Alf : ${alphabet} \nINIT : ${initGeneratedStates} \nSTATES : ${stateList}';
     return str;
   }
 }

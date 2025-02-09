@@ -105,6 +105,7 @@ class Grammar {
 
     processRules();
     MergeRules();
+    _processStartSymbol(true);
   }
 
   String NonTerm() {
@@ -190,9 +191,9 @@ class Grammar {
     }
   }
 
-  void _processStartSymbol() {
-    if (computeNullable().contains(startSymbol)) {
-      String newStartSymbol = "S'";
+  void _processStartSymbol([bool afterAll = false]) {
+    String newStartSymbol = "S'";
+    if (!afterAll && computeNullable().contains(startSymbol)) {
       nonTerminals.add(newStartSymbol);
 
       if (!rules.any((rule) =>
@@ -213,6 +214,18 @@ class Grammar {
       }
 
       startSymbol = newStartSymbol;
+    }
+    if (afterAll) {
+      for (var i = 0; i < rules.length; i++) {
+        rules[i] = Rule(
+          rules[i].left,
+          rules[i].conjuncts.map((conj) {
+            return conj.map((symbol) {
+              return symbol == 'S' ? newStartSymbol : symbol;
+            }).toList();
+          }).toList(),
+        );
+      }
     }
   }
 
