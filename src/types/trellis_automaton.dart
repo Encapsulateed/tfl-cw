@@ -215,6 +215,7 @@ class TrellisAutomaton {
   Grammar toGrammar() {
     var grammar = Grammar();
     var stateList = states.toList();
+    stateList.sort((a, b) => a.toString().compareTo(b.toString()));
 
     for (var i = 0; i < stateList.length; i++) {
       grammar.nonTerminals.add('A$i');
@@ -224,25 +225,22 @@ class TrellisAutomaton {
 
     for (var q1 in states) {
       for (var q2 in states) {
-        var q = parsing_table[(q1,q2)]!;
+        var q = parsing_table[(q1, q2)]!;
 
         var q1idx = stateList.indexOf(q1);
         var q2idx = stateList.indexOf(q2);
 
         var qidx = stateList.indexOf(q);
 
-        for (var b in alphabet) {
-          for (var c in alphabet) {
-            var r = Rule(
-              'A$qidx',
-              [
-                [b, 'A$q2idx'],
-                ['A$q1idx', c]
-              ],
-            );
-            grammar.rules.add(r);
-          }
-        }
+        var b = q1.left;
+        var c = q2.right;
+        grammar.rules.add(Rule(
+          'A$qidx',
+          [
+            [b, 'A$q2idx'],
+            ['A$q1idx', c]
+          ],
+        ));
       }
     }
 
