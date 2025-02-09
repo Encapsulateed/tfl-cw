@@ -5,11 +5,13 @@ import '../src/types/grammar.dart';
 
 void main() {
   group('Тестирование корректности введения грамматик', () {
+    var path = '${Directory.systemTemp.path}/input.txt';
     test('Файловый ввод 1', () async {
-      var tempFile = File('${Directory.systemTemp.path}/input.txt');
+      var tempFile = File(path);
       await tempFile.writeAsString("S -> A a & B b\nA -> a\nB -> b");
 
-      var grammar = Grammar.fromFile(tempFile);
+      var grammar = Grammar();
+      grammar.loadFromFile(path);
 
       expect(grammar.nonTerminals, equals(List.from(['S', 'A', 'B'])));
       expect(grammar.terminals, equals(List.from(['a', 'b'])));
@@ -36,11 +38,12 @@ void main() {
     });
 
     test('Файловый ввод 2', () async {
-      var tempFile = File('${Directory.systemTemp.path}/input.txt');
+      var tempFile = File(path);
       await tempFile.writeAsString(
           "S -> A a &                          B b\nA ->    a\n      B -> b");
 
-      var grammar = Grammar.fromFile(tempFile);
+      var grammar = Grammar();
+      grammar.loadFromFile(path);
 
       expect(grammar.nonTerminals, equals(List.from(['S', 'A', 'B'])));
       expect(grammar.terminals, equals(List.from(['a', 'b'])));
@@ -67,12 +70,13 @@ void main() {
     });
 
     test('Файловый ввод 3 граматика Охотина (ita)', () async {
-      var tempFile = File('${Directory.systemTemp.path}/input.txt');
+      var tempFile = File(path);
 
       await tempFile.writeAsString(
           "S -> K a & a R \nK -> a A | K a \nP -> a A \nA -> P b | b\nR -> B a | a R \nQ -> B a \nB -> b Q | b ");
 
-      var grammar = Grammar.fromFile(tempFile);
+      var grammar = Grammar();
+      grammar.loadFromFile(path);
 
       expect(grammar.nonTerminals,
           equals(List.from(['S', 'K', 'R', 'A', 'P', 'B', 'Q'])));

@@ -1,4 +1,3 @@
-import '../utils/common.dart';
 import 'rule.dart';
 import 'state.dart';
 import 'grammar.dart';

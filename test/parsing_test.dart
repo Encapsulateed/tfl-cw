@@ -5,12 +5,14 @@ import '../src/types/parsing_tree/tree.dart';
 import '../src/types/trellis_automaton.dart';
 
 void main() async {
-  var ita_grammar = File('${Directory.systemTemp.path}/ita_grammar.txt');
+  var path = '${Directory.systemTemp.path}/ita_grammar.txt';
+  var ita_grammar = File(path);
 
   await ita_grammar.writeAsString(
       "S -> K a & a R \nK -> a A | K a \nP -> a A \nA -> P b | b\nR -> B a | a R \nQ -> B a \nB -> b Q | b ");
 
-  var grammar = Grammar.fromFile(ita_grammar);
+  var grammar = Grammar();
+  grammar.loadFromFile(path);
 
   var trellis = TrellisAutomaton.build(grammar);
 

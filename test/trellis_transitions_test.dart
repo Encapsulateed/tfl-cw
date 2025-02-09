@@ -5,12 +5,15 @@ import '../src/types/state.dart';
 import '../src/types/trellis_automaton.dart';
 
 void main() async {
-  var tempFile = File('${Directory.systemTemp.path}/input1.txt');
+  var path = '${Directory.systemTemp.path}/input1.txt';
+
+  var tempFile = File(path);
 
   await tempFile.writeAsString(
       "S -> K a & a R \nK -> a A | K a \nP -> a A \nA -> P b | b\nR -> B a | a R \nQ -> B a \nB -> b Q | b ");
 
-  var grammar = Grammar.fromFile(tempFile);
+  var grammar = Grammar();
+  grammar.loadFromFile(path);
 
   var trellis = TrellisAutomaton.build(grammar);
   group('Работа функции Init', () {
