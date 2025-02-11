@@ -18,6 +18,8 @@ class Rule implements Comparable {
   // Z = {A | exists A -> b B1 & .. & b Bm & C1 c & .. & Cn c}
   // where B1...Bm in q2.Generating == X and C1...Cn in q1.Generating == Y
   bool applicableForTransition(State q1, State q2) {
+    if (conjuncts.any((conj) => conj.length == 1)) return false;
+
     var b = q1.left;
     var c = q2.right;
     var X = q1.generating;
@@ -35,8 +37,9 @@ class Rule implements Comparable {
         .map((conj) => conj.first)
         .toSet();
 
-    if (B.isEmpty && C.isEmpty) return false;
-    return (B.isEmpty || Y.containsAll(B)) && (C.isEmpty || X.containsAll(C));
+    return (B.isNotEmpty || C.isNotEmpty) &&
+        (B.isEmpty || Y.containsAll(B)) &&
+        (C.isEmpty || X.containsAll(C));
   }
 
   @override

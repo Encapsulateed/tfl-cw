@@ -15,87 +15,6 @@ class Grammar {
     this.rules = prd;
   }
 
-  void loadFromFile(String path) {
-    try {
-      var inputFile = File(path);
-      var lines = inputFile.readAsStringSync().split('\n');
-
-      for (var line in lines) {
-        if (line.trim().isNotEmpty) {
-          var parts = line.split('->').map((part) => part.trim()).toList();
-
-          var left = parts[0].toUpperCase();
-
-          nonTerminals.add(left);
-
-          var alternatives = parts[1].split('|').map((alt) => alt.trim());
-
-          for (var alternative in alternatives) {
-            var conjuncts = alternative
-                .split('&')
-                .map((conj) => conj
-                    .trim()
-                    .split(RegExp(r'\s+'))
-                    .where((word) => word.isNotEmpty)
-                    .toList())
-                .toList();
-
-            conjuncts.expand((conj) => conj).forEach((symbol) {
-              if (_isNonTerminal(symbol)) {
-                nonTerminals.add(symbol);
-              } else {
-                if (symbol != 'ε') {
-                  terminals.add(symbol);
-                }
-              }
-            });
-
-            rules.add(Rule(left, conjuncts));
-          }
-        }
-      }
-      startSymbol = nonTerminals.first;
-    } catch (e) {
-      print('Произошла ошибка при чтении файла: $e');
-    }
-  }
-
-  void saveToFile(String path) {
-    var outputFile = File(path);
-    var buffer = StringBuffer();
-
-    var groups = <String, List<Rule>>{};
-    for (var rule in rules) {
-      groups.putIfAbsent(rule.left, () => []).add(rule);
-    }
-
-    if (groups.containsKey(startSymbol)) {
-      var ruleList = groups[startSymbol]!;
-      List<String> alternatives = ruleList.map((rule) {
-        List<String> conjunctStrings =
-            rule.conjuncts.map((conj) => conj.join(" ")).toList();
-        return conjunctStrings.join(" & ");
-      }).toList();
-      buffer.writeln("$startSymbol -> " + alternatives.join(" | "));
-      groups.remove(startSymbol);
-    }
-
-    groups.forEach((left, ruleList) {
-      List<String> alternatives = ruleList.map((rule) {
-        List<String> conjunctStrings =
-            rule.conjuncts.map((conj) => conj.join(" ")).toList();
-        return conjunctStrings.join(" & ");
-      }).toList();
-      buffer.writeln("$left -> " + alternatives.join(" | "));
-    });
-
-    outputFile.writeAsStringSync(buffer.toString());
-  }
-
-  bool _isNonTerminal(String symbol) {
-    return RegExp(r'^[A-Z]+[0-9]*$').hasMatch(symbol);
-  }
-
   void convertToLNF() {
     _processStartSymbol();
 
@@ -458,7 +377,6 @@ class Grammar {
   }
 
   void removeDuplicateAlternatives() {
-
     final Map<String, List<Rule>> groupedRules = {};
     for (final rule in rules) {
       groupedRules.putIfAbsent(rule.left, () => []).add(rule);
@@ -595,5 +513,86 @@ class Grammar {
     Set<String> usedNonTerminals = rules.map((rule) => rule.left).toSet();
     nonTerminals
         .removeWhere((nonTerminal) => !usedNonTerminals.contains(nonTerminal));
+  }
+
+  void loadFromFile(String path) {
+    try {
+      var inputFile = File(path);
+      var lines = inputFile.readAsStringSync().split('\n');
+
+      for (var line in lines) {
+        if (line.trim().isNotEmpty) {
+          var parts = line.split('->').map((part) => part.trim()).toList();
+
+          var left = parts[0].toUpperCase();
+
+          nonTerminals.add(left);
+
+          var alternatives = parts[1].split('|').map((alt) => alt.trim());
+
+          for (var alternative in alternatives) {
+            var conjuncts = alternative
+                .split('&')
+                .map((conj) => conj
+                    .trim()
+                    .split(RegExp(r'\s+'))
+                    .where((word) => word.isNotEmpty)
+                    .toList())
+                .toList();
+
+            conjuncts.expand((conj) => conj).forEach((symbol) {
+              if (_isNonTerminal(symbol)) {
+                nonTerminals.add(symbol);
+              } else {
+                if (symbol != 'ε') {
+                  terminals.add(symbol);
+                }
+              }
+            });
+
+            rules.add(Rule(left, conjuncts));
+          }
+        }
+      }
+      startSymbol = nonTerminals.first;
+    } catch (e) {
+      print('Произошла ошибка при чтении файла: $e');
+    }
+  }
+
+  void saveToFile(String path) {
+    var outputFile = File(path);
+    var buffer = StringBuffer();
+
+    var groups = <String, List<Rule>>{};
+    for (var rule in rules) {
+      groups.putIfAbsent(rule.left, () => []).add(rule);
+    }
+
+    if (groups.containsKey(startSymbol)) {
+      var ruleList = groups[startSymbol]!;
+      List<String> alternatives = ruleList.map((rule) {
+        List<String> conjunctStrings =
+            rule.conjuncts.map((conj) => conj.join(" ")).toList();
+        return conjunctStrings.join(" & ");
+      }).toList();
+      buffer.writeln("$startSymbol -> " + alternatives.join(" | "));
+      groups.remove(startSymbol);
+    }
+
+    groups.forEach((left, ruleList) {
+      List<String> alternatives = ruleList.map((rule) {
+        List<String> conjunctStrings =
+            rule.conjuncts.map((conj) => conj.join(" ")).toList();
+        return conjunctStrings.join(" & ");
+      }).toList();
+      buffer.writeln("$left -> " + alternatives.join(" | "));
+    });
+
+    outputFile.writeAsStringSync(buffer.toString());
+  }
+
+  bool _isNonTerminal(String symbol) {
+    return RegExp(r'^[A-Z]+[0-9]*$').hasMatch(symbol);
   }
 }
