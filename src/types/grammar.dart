@@ -101,7 +101,11 @@ class Grammar {
 
     processEpsRules(computeNullable());
 
-    removeUnitConjuncts();
+    _eliminateUnitConjuncts();
+
+    removeUselessConjuncts();
+
+    removeDuplicateConjuncts();
 
     processRules();
     MergeRules();
@@ -342,34 +346,145 @@ class Grammar {
     rules.addAll(Rules);
   }
 
-  void removeUnitConjuncts() {
-    List<Rule> updatedRules = [];
+  void _eliminateUnitConjuncts() {
+    final List<Rule> newRules = [];
+    bool hasChanges;
 
-    for (var rule in rules) {
-      bool modified = false;
+    do {
+      hasChanges = false;
+      newRules.clear();
 
-      for (var conjunct in rule.conjuncts) {
-        if (conjunct.length == 1 && _isNonTerminal(conjunct[0])) {
-          modified = true;
-          String targetNonTerminal = conjunct[0];
+      for (final rule in rules) {
+        final unitConjunctIndices = <int>[];
+        for (int i = 0; i < rule.conjuncts.length; i++) {
+          if (rule.conjuncts[i].length == 1 &&
+              _isNonTerminal(rule.conjuncts[i][0])) {
+            unitConjunctIndices.add(i);
+          }
+        }
 
-          for (var targetRule
-              in rules.where((r) => r.left == targetNonTerminal)) {
-            updatedRules.add(Rule(rule.left, [
-              for (var originalConjunct in rule.conjuncts)
-                if (originalConjunct != conjunct) originalConjunct,
-              ...targetRule.conjuncts
-            ]));
+        if (unitConjunctIndices.isEmpty) {
+          newRules.add(rule);
+          continue;
+        }
+
+        final alternatives = <List<List<String>>>[];
+        for (final index in unitConjunctIndices) {
+          final unitSymbol = rule.conjuncts[index][0];
+          final unitRules = rules.where((r) => r.left == unitSymbol).toList();
+
+          if (unitRules.isEmpty) {
+            alternatives.add([rule.conjuncts[index]]);
+            continue;
+          }
+
+          final List<List<String>> unitAlternatives = [];
+          for (final unitRule in unitRules) {
+            unitAlternatives.addAll(unitRule.conjuncts);
+          }
+          alternatives.add(unitAlternatives);
+        }
+
+        final combined = _cartesianProduct(alternatives);
+
+        for (final combination in combined) {
+          final updatedConjuncts = List<List<String>>.from(rule.conjuncts);
+
+          for (int i = 0; i < unitConjunctIndices.length; i++) {
+            final index = unitConjunctIndices[i];
+            updatedConjuncts[index] = combination[i];
+          }
+
+          newRules.add(Rule(rule.left, updatedConjuncts));
+          hasChanges = true;
+        }
+      }
+
+      if (hasChanges) {
+        rules
+          ..clear()
+          ..addAll(newRules);
+      }
+    } while (hasChanges);
+
+    rules.removeWhere((rule) =>
+        rule.conjuncts.any((c) => c.length == 1 && c[0] == rule.left));
+  }
+
+  List<List<List<String>>> _cartesianProduct(List<List<List<String>>> lists) {
+    return lists.fold<List<List<List<String>>>>(
+      [[]],
+      (previous, current) =>
+          previous.expand((x) => current.map((y) => [...x, y])).toList(),
+    );
+  }
+
+  void removeUselessConjuncts() {
+    bool isUsless(Rule r) {
+      var conjs = r.conjuncts;
+
+      var containsTerminalinConj = conjs
+              .any((c) => c.length == 1 && terminals.contains(c.first)) &&
+          conjs
+              .any((c) => c.any((conjItem) => nonTerminals.contains(conjItem)));
+
+      return containsTerminalinConj;
+    }
+
+    rules = List.from(rules.where((r) => !isUsless(r)));
+  }
+
+  void removeDuplicateConjuncts() {
+    for (int i = 0; i < rules.length; i++) {
+      final rule = rules[i];
+      final List<List<String>> uniqueConjuncts = [];
+      final Set<String> seenConjuncts = {};
+
+      for (final conjunct in rule.conjuncts) {
+        final conjunctKey = conjunct.join(' ');
+
+        if (!seenConjuncts.contains(conjunctKey)) {
+          uniqueConjuncts.add(conjunct);
+          seenConjuncts.add(conjunctKey);
+        }
+      }
+
+      if (uniqueConjuncts.length != rule.conjuncts.length) {
+        rules[i] = Rule(rule.left, uniqueConjuncts);
+      }
+    }
+
+    rules.removeWhere((rule) => rule.conjuncts.isEmpty);
+  }
+
+  void removeDuplicateAlternatives() {
+
+    final Map<String, List<Rule>> groupedRules = {};
+    for (final rule in rules) {
+      groupedRules.putIfAbsent(rule.left, () => []).add(rule);
+    }
+
+    rules.clear();
+    groupedRules.forEach((left, ruleGroup) {
+      final Set<String> uniqueConjuncts = {};
+      final List<List<String>> mergedConjuncts = [];
+
+      for (final rule in ruleGroup) {
+        for (final conjunct in rule.conjuncts) {
+          final normalized = List<String>.from(conjunct)..sort();
+          final key = normalized.join(' ');
+
+          if (!uniqueConjuncts.contains(key)) {
+            mergedConjuncts.add(conjunct);
+            uniqueConjuncts.add(key);
           }
         }
       }
 
-      if (!modified) {
-        updatedRules.add(rule);
+      if (mergedConjuncts.isNotEmpty) {
+        rules.add(Rule(left, mergedConjuncts));
       }
-    }
-
-    rules = updatedRules;
+    });
   }
 
   void groupAndMergeEqualRules() {

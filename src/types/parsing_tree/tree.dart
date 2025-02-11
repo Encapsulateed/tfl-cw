@@ -27,7 +27,8 @@ class ParsingTree {
   }
 
   void compute_next_layer(List<Node> prev) {
-    while (prev.length != 1) {
+    if (prev.isEmpty) return;
+    while (prev.length > 1) {
       List<Node> next = slidingPairs(prev)
           .map((pair) => _compute_next(pair.$1, pair.$2))
           .toList();

@@ -1,3 +1,4 @@
+import '../utils/common.dart';
 import 'rule.dart';
 import 'state.dart';
 import 'grammar.dart';
@@ -149,7 +150,12 @@ class TrellisAutomaton {
 
   State Function(String) _build_init(List<Rule> rules) {
     return (String w) => State.create(
-        w, rules.where((r) => r.deducible(w)).map((r) => r.left).toSet(), w);
+        w,
+        rules
+            .where((r) => r.conjuncts.any((c) => c.join("") == w))
+            .map((r) => r.left)
+            .toSet(),
+        w);
   }
 
   State Function(State q1, State q2) _build_transitions(List<Rule> rules) {
@@ -174,7 +180,6 @@ class TrellisAutomaton {
       for (var q1 in reachableStates) {
         for (var q2 in reachableStates) {
           var newState = Transition(q1, q2);
-
           if (!reachableStates.contains(newState) &&
               !newStates.contains(newState)) {
             newStates.add(newState);

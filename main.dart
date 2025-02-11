@@ -45,6 +45,7 @@ void main(List<String> arguments) {
 
       g.convertToLNF();
       g.saveToFile('lnf_grammar.txt');
+      print(g);
       ta = TrellisAutomaton.build(g);
     }
 
