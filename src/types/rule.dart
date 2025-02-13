@@ -37,7 +37,7 @@ class Rule implements Comparable {
         .map((conj) => conj.first)
         .toSet();
 
-    if(B.length + C.length != conjuncts.length) return false;
+    if (B.length + C.length != conjuncts.length) return false;
 
     if (C.isEmpty && B.isEmpty) return false;
 
