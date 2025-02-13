@@ -254,76 +254,46 @@ class Grammar {
   }
 
   void _eliminateUnitConjuncts() {
-    final List<Rule> newRules = [];
-    bool hasChanges;
+    final orderedNonTerminals = nonTerminals.toList();
+    for (int j = 0; j < orderedNonTerminals.length; j++) {
+      final currentSymbol = orderedNonTerminals[j];
 
-    do {
-      hasChanges = false;
-      newRules.clear();
+      final nonUnitRules = rules
+          .where((rule) => rule.left == currentSymbol)
+          .where((rule) => !rule.conjuncts.any((conj) =>
+              conj.length == 1 &&
+              _isNonTerminal(conj[0]) &&
+              orderedNonTerminals.indexOf(conj[0]) <= j))
+          .toList();
 
-      for (final rule in rules) {
-        final unitConjunctIndices = <int>[];
-        for (int i = 0; i < rule.conjuncts.length; i++) {
-          if (rule.conjuncts[i].length == 1 &&
-              _isNonTerminal(rule.conjuncts[i][0])) {
-            unitConjunctIndices.add(i);
+      final affectedRules = rules
+          .where((rule) => rule.conjuncts
+              .any((conj) => conj.length == 1 && conj[0] == currentSymbol))
+          .toList();
+
+      for (final affectedRule in affectedRules) {
+        rules.remove(affectedRule);
+
+        for (final replacementRule in nonUnitRules) {
+          for (final replacementConjunct in replacementRule.conjuncts) {
+            final newConjuncts = affectedRule.conjuncts.map((conj) {
+              return (conj.length == 1 && conj[0] == currentSymbol)
+                  ? replacementConjunct
+                  : conj;
+            }).toList();
+
+            if (replacementRule.conjuncts.length == 1) {
+              rules.add(Rule(affectedRule.left, newConjuncts));
+            } else {
+              rules.add(Rule(affectedRule.left, replacementRule.conjuncts));
+            }
           }
-        }
-
-        if (unitConjunctIndices.isEmpty) {
-          newRules.add(rule);
-          continue;
-        }
-
-        final alternatives = <List<List<String>>>[];
-        for (final index in unitConjunctIndices) {
-          final unitSymbol = rule.conjuncts[index][0];
-          final unitRules = rules.where((r) => r.left == unitSymbol).toList();
-
-          if (unitRules.isEmpty) {
-            alternatives.add([rule.conjuncts[index]]);
-            continue;
-          }
-
-          final List<List<String>> unitAlternatives = [];
-          for (final unitRule in unitRules) {
-            unitAlternatives.addAll(unitRule.conjuncts);
-          }
-          alternatives.add(unitAlternatives);
-        }
-
-        final combined = _cartesianProduct(alternatives);
-
-        for (final combination in combined) {
-          final updatedConjuncts = List<List<String>>.from(rule.conjuncts);
-
-          for (int i = 0; i < unitConjunctIndices.length; i++) {
-            final index = unitConjunctIndices[i];
-            updatedConjuncts[index] = combination[i];
-          }
-
-          newRules.add(Rule(rule.left, updatedConjuncts));
-          hasChanges = true;
         }
       }
-
-      if (hasChanges) {
-        rules
-          ..clear()
-          ..addAll(newRules);
-      }
-    } while (hasChanges);
+    }
 
     rules.removeWhere((rule) =>
         rule.conjuncts.any((c) => c.length == 1 && c[0] == rule.left));
-  }
-
-  List<List<List<String>>> _cartesianProduct(List<List<List<String>>> lists) {
-    return lists.fold<List<List<List<String>>>>(
-      [[]],
-      (previous, current) =>
-          previous.expand((x) => current.map((y) => [...x, y])).toList(),
-    );
   }
 
   void removeUselessConjuncts() {

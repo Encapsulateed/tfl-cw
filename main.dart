@@ -45,7 +45,6 @@ void main(List<String> arguments) {
 
       g.convertToLNF();
       g.saveToFile('lnf_grammar.txt');
-      print(g);
 
       if (g.rules.any((r) => r.left == g.startSymbol && r.deducible('ε'))) {
         g.terminals.add('ε');
