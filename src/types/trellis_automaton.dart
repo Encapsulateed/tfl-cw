@@ -233,15 +233,17 @@ class TrellisAutomaton {
 
         var qidx = stateList.indexOf(q);
 
-        var b = q1.left;
-        var c = q2.right;
-        grammar.rules.add(Rule(
-          'A$qidx',
-          [
-            [b, 'A$q2idx'],
-            ['A$q1idx', c]
-          ],
-        ));
+        for (var b in alphabet) {
+          for (var c in alphabet) {
+            grammar.rules.add(Rule(
+              'A$qidx',
+              [
+                [b, 'A$q2idx'],
+                ['A$q1idx', c]
+              ],
+            ));
+          }
+        }
       }
     }
 
