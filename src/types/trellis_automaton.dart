@@ -148,24 +148,23 @@ class TrellisAutomaton {
   }
 
   State Function(String) _build_init(List<Rule> rules) {
-    return (String w) => State.create(
-        w,
-        rules
-            .where((r) => r.conjuncts.any((c) => c.join("") == w))
-            .map((r) => r.left)
-            .toSet(),
-        w);
+    Set<String> buildInitSet(String w) {
+      return rules.where((r) => r.deducible(w)).map((r) => r.left).toSet();
+    }
+
+    return (String w) => State.create(w, buildInitSet(w), w);
   }
 
   State Function(State q1, State q2) _build_transitions(List<Rule> rules) {
+    Set<String> buildStateSet(State q1, State q2) {
+      return rules
+          .where((r) => r.applicableForTransition(q1, q2))
+          .map((r) => r.left)
+          .toSet();
+    }
+
     return (State q1, State q2) {
-      return State.create(
-          q1.left,
-          rules
-              .where((r) => r.applicableForTransition(q1, q2))
-              .map((r) => r.left)
-              .toSet(),
-          q2.right);
+      return State.create(q1.left, buildStateSet(q1, q2), q2.right);
     };
   }
 

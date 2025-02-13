@@ -54,6 +54,6 @@ class ParsingTree {
   }
 
   bool isRecognizing() {
-    return _ta.finals.contains(layers.last.first.related_state);
+    return _ta.finals.contains(layers.last[0].related_state);
   }
 }

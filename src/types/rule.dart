@@ -37,9 +37,11 @@ class Rule implements Comparable {
         .map((conj) => conj.first)
         .toSet();
 
-    return (B.isNotEmpty || C.isNotEmpty) &&
-        (B.isEmpty || Y.containsAll(B)) &&
-        (C.isEmpty || X.containsAll(C));
+    if(B.length + C.length != conjuncts.length) return false;
+
+    if (C.isEmpty && B.isEmpty) return false;
+
+    return Y.containsAll(B) && X.containsAll(C);
   }
 
   @override
