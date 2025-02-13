@@ -49,7 +49,7 @@ void main(List<String> arguments) {
 
       if (g.rules.any((r) => r.left == g.startSymbol && r.deducible('ε'))) {
         g.terminals.add('ε');
-        word += 'ε';
+        // word += 'ε';
       }
 
       ta = TrellisAutomaton.build(g);
