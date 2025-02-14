@@ -297,7 +297,7 @@ class Grammar {
   }
 
   void removeUselessConjuncts() {
-    bool isUsless(Rule r) {
+    bool isUseless(Rule r) {
       var conjs = r.conjuncts;
 
       var containsTerminalinConj = conjs
@@ -308,7 +308,7 @@ class Grammar {
       return containsTerminalinConj;
     }
 
-    rules = List.from(rules.where((r) => !isUsless(r)));
+    rules = List.from(rules.where((r) => !isUseless(r)));
   }
 
   void removeDuplicateConjuncts() {
