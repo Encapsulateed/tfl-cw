@@ -74,8 +74,21 @@ class Rule implements Comparable {
     return true;
   }
 
+
   @override
-  int get hashCode => left.hashCode ^ conjuncts.hashCode;
+  int get hashCode {
+    var sortedConjuncts = conjuncts.map((conj) => List<String>.from(conj)..sort()).toList();
+    sortedConjuncts.sort((a, b) => a.toString().compareTo(b.toString()));
+    return left.hashCode ^ _hashConjuncts(sortedConjuncts);
+  }
+
+  int _hashConjuncts(List<List<String>> conjuncts) {
+    int result = 1;
+    for (var conj in conjuncts) {
+      result = 31 * result + conj.join(',').hashCode;
+    }
+    return result;
+  }
 
   @override
   int compareTo(other) {

@@ -311,27 +311,9 @@ class Grammar {
     rules = List.from(rules.where((r) => !isUsless(r)));
   }
 
+
   void removeDuplicateConjuncts() {
-    for (int i = 0; i < rules.length; i++) {
-      final rule = rules[i];
-      final List<List<String>> uniqueConjuncts = [];
-      final Set<String> seenConjuncts = {};
-
-      for (final conjunct in rule.conjuncts) {
-        final conjunctKey = conjunct.join(' ');
-
-        if (!seenConjuncts.contains(conjunctKey)) {
-          uniqueConjuncts.add(conjunct);
-          seenConjuncts.add(conjunctKey);
-        }
-      }
-
-      if (uniqueConjuncts.length != rule.conjuncts.length) {
-        rules[i] = Rule(rule.left, uniqueConjuncts);
-      }
-    }
-
-    rules.removeWhere((rule) => rule.conjuncts.isEmpty);
+    rules = rules.toSet().toList();
   }
 
   void removeDuplicateAlternatives() {
