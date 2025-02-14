@@ -311,7 +311,6 @@ class Grammar {
     rules = List.from(rules.where((r) => !isUsless(r)));
   }
 
-
   void removeDuplicateConjuncts() {
     rules = rules.toSet().toList();
   }
